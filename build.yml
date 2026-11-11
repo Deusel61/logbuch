@@ -1,0 +1,51 @@
+# Baut die iPhone-App (unsignierte IPA) auf einem Mac von GitHub.
+# Start: im Repository oben auf „Actions“ → „IPA bauen“ → „Run workflow“.
+# Ergebnis: unten auf der Lauf-Seite unter „Artifacts“ → „Logbuch-IPA“ herunterladen.
+name: IPA bauen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt erzeugen
+        run: xcodegen generate
+
+      - name: App bauen (ohne Signatur)
+        run: |
+          xcodebuild \
+            -project Logbuch.xcodeproj \
+            -scheme Logbuch \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: IPA packen
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Logbuch.app Payload/
+          zip -qry Logbuch.ipa Payload
+          ls -lh Logbuch.ipa
+
+      - name: IPA bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Logbuch-IPA
+          path: Logbuch.ipa
+          retention-days: 30
