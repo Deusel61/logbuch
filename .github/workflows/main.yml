@@ -13,6 +13,16 @@ jobs:
       - name: Code holen
         uses: actions/checkout@v4
 
+      - name: Dateien in Ordner sortieren
+        run: |
+          mkdir -p Sources Web Resources/Assets.xcassets/AppIcon.appiconset
+          if [ -f LogbuchApp.swift ]; then mv LogbuchApp.swift Sources/; fi
+          if [ -f index.html ]; then mv index.html Web/; fi
+          if [ -f icon-1024.png ]; then mv icon-1024.png Resources/Assets.xcassets/AppIcon.appiconset/; fi
+          printf '%s\n' '{ "info" : { "author" : "xcode", "version" : 1 } }' > Resources/Assets.xcassets/Contents.json
+          printf '%s\n' '{ "images" : [ { "filename" : "icon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" } ], "info" : { "author" : "xcode", "version" : 1 } }' > Resources/Assets.xcassets/AppIcon.appiconset/Contents.json
+          ls -R Sources Web Resources
+
       - name: XcodeGen installieren
         run: brew install xcodegen
 
